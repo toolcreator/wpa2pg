@@ -1,16 +1,28 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <sys/random.h>
 
+size_t get_pwd_str_size(int argc, char *argv[]);
 char get_random_char(void);
 void generate_password(char *buffer, size_t buffer_size);
 
-int main() {
-  const size_t pwd_str_size = 64;
-  char pwd_str[pwd_str_size];
+int main(int argc, char *argv[]) {
+  size_t pwd_str_size = get_pwd_str_size(argc, argv);
+  char *pwd_str = calloc(pwd_str_size, sizeof(char));
   generate_password(pwd_str, pwd_str_size);
   printf("%s\n", pwd_str);
+  free(pwd_str);
   return 0;
+}
+
+size_t get_pwd_str_size(int argc, char *argv[]) {
+  size_t pwd_str_size = 64;
+  if (argc >= 2) {
+    pwd_str_size = strtoul(argv[1], NULL, 10) + 1;
+    // TODO error handling
+  }
+  return pwd_str_size;
 }
 
 char get_random_char(void) {
