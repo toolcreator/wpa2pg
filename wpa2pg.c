@@ -1,26 +1,42 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/random.h>
 
 size_t get_pwd_str_size(int argc, char *argv[]);
+
 char get_random_char(void);
 void generate_password(char *buffer, size_t buffer_size);
 
 int main(int argc, char *argv[]) {
-  size_t pwd_str_size = get_pwd_str_size(argc, argv);
-  char *pwd_str = calloc(pwd_str_size, sizeof(char));
-  generate_password(pwd_str, pwd_str_size);
-  printf("%s\n", pwd_str);
-  free(pwd_str);
+  const size_t pwd_str_size = get_pwd_str_size(argc, argv);
+  if (pwd_str_size != 0) {
+    char *pwd_str = calloc(pwd_str_size, sizeof(char));
+    if (pwd_str != NULL) {
+
+      generate_password(pwd_str, pwd_str_size);
+      printf("%s\n", pwd_str);
+      free(pwd_str);
+
+    } else {
+      printf("Failed to allocate memory for a password of length %lu\n", pwd_str_size - 1);
+    }
+  } else {
+    printf("Invalid password length: %s\n", argv[1]);
+  }
   return 0;
 }
 
 size_t get_pwd_str_size(int argc, char *argv[]) {
   size_t pwd_str_size = 64;
   if (argc >= 2) {
-    pwd_str_size = strtoul(argv[1], NULL, 10) + 1;
-    // TODO error handling
+    errno = 0;
+    char *stroul_endptr = NULL;
+    pwd_str_size = strtoul(argv[1], &stroul_endptr, 10) + 1;
+    if (errno != 0 || stroul_endptr == argv[1]) {
+      pwd_str_size = 0;
+    }
   }
   return pwd_str_size;
 }
