@@ -17,6 +17,21 @@ WPA2 password generator.
 make wpa2pg
 ```
 
+## usage
+
+```
+$./wpa2pg -h
+Usage: wpa2pg [options] [PWD_LEN]
+
+Options:
+  -s --exclude-special          Exclude special / include only alphanumeric characters
+  -a --exclude-ambiguous        Exlude ambiguous characters
+  -h --help                     Print this message
+
+PWD_LEN
+  Length of the password (default: 63)
+```
+
 ## example
 
 ```
@@ -24,6 +39,6 @@ $ make wpa2pg
 cc -O3 -Wall -o wpa2pg wpa2pg.c
 $ ./wpa2pg
 2jF/?g.z*U&tYakCWR/-,*^6o9mnGHkX^$BnOt~0FWc+_y6-=OAv$5pcyH@L~!T
-$ ./wpa2pg 8
-t~r_8#Uz
+$ ./wpa2pg -as 8
+bLsBLouk
 ```
