@@ -3,7 +3,7 @@
 WPA2 password generator.
 
 - each charachter is drawn randomly from the set of allowed characters
-- random number generation is cryptographically secure by using [`getrandom`](https://man7.org/linux/man-pages/man2/getrandom.2.html)
+- uses [`getrandom`](https://man7.org/linux/man-pages/man2/getrandom.2.html)
 - linux only (for now)
 
 ## prerequisites

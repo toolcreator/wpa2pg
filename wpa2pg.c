@@ -27,20 +27,16 @@ int main(int argc, char *argv[]) {
   args_t *args = get_args(argc, (const char **)argv);
   if (args != NULL) {
     const size_t pwd_str_size = args->pwd_len + 1;
-    if (pwd_str_size > 1) {
-      char *pwd_str = calloc(pwd_str_size, sizeof(char));
-      if (pwd_str != NULL) {
-        generate_password(pwd_str, pwd_str_size, &args->pwd_props);
-        printf("%s\n", pwd_str);
+    char *pwd_str = calloc(pwd_str_size, sizeof(char));
+    if (pwd_str != NULL) {
+      generate_password(pwd_str, pwd_str_size, &args->pwd_props);
+      printf("%s\n", pwd_str);
 
-        free(pwd_str);
-        pwd_str = NULL;
-      } else {
-        printf("Failed to allocate memory for a password of length %lu\n",
-               pwd_str_size - 1);
-      }
+      free(pwd_str);
+      pwd_str = NULL;
     } else {
-      printf("Invalid password length: %s\n", argv[1]);
+      printf("Failed to allocate memory for a password of length %lu\n",
+             pwd_str_size - 1);
     }
 
     free(args);
@@ -71,6 +67,8 @@ args_t *get_args(int argc, const char *argv[]) {
           } else if (!strcmp(arg, "--exclude-ambiguous")) {
             args->pwd_props.exclude_ambiguous = true;
           } else if (!strcmp(arg, "--help")) {
+            error = true;
+          } else {
             error = true;
           }
         } else {
