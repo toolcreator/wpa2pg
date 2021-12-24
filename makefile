@@ -1,4 +1,4 @@
-CFLAGS = -O3 -Wall
+CFLAGS = -O3 -Wall -Werror
 
 wpa2pg: wpa2pg.c
 	$(CC) $(CFLAGS) -o $@ $<
