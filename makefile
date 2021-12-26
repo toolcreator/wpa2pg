@@ -1,7 +1,13 @@
-CFLAGS = -Wall -Werror
+CFLAGS = -Wall -Werror -Iinc
 
-HEADERS = char_list_list.h
-OBJECTS = wpa2pg.o char_list_list.o
+HEADERS = $(addsuffix .h,$(addprefix inc/, \
+	char_list_list \
+))
+
+OBJECTS = $(addsuffix .o,$(addprefix src/, \
+	wpa2pg \
+	char_list_list \
+))
 
 wpa2pg: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@
