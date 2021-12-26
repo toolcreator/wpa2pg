@@ -1,7 +1,7 @@
 #include "char_list_list.h"
 
 char cll_index(const char_list_list_t* c, unsigned int idx) {
-  if (!c && c->length < 1) {
+  if (!c || c->length < 1) {
     return -1;
   }
 
