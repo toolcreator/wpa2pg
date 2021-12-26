@@ -35,10 +35,14 @@ PWD_LEN
 ## example
 
 ```
-$ make wpa2pg
-cc -O3 -Wall -o wpa2pg wpa2pg.c
+$ make release
+rm -f wpa2pg.o char_list_list.o
+rm -f wpa2pg
+cc -Wall -Werror -O2 -c wpa2pg.c -o wpa2pg.o
+cc -Wall -Werror -O2 -c char_list_list.c -o char_list_list.o
+cc -Wall -Werror -O2 wpa2pg.o char_list_list.o -o wpa2pg
 $ ./wpa2pg
-2jF/?g.z*U&tYakCWR/-,*^6o9mnGHkX^$BnOt~0FWc+_y6-=OAv$5pcyH@L~!T
+m7GIZ8$#XB_3TE,Rvr&l7qk_g7hOr,HfOMBIp*y,KJWMhJ#!B/FlMk,x2$GRx4U
 $ ./wpa2pg -as 8
-bLsBLouk
+4NePv9kD
 ```
