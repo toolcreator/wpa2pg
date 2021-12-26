@@ -6,6 +6,8 @@
 #include <string.h>
 #include <sys/random.h>
 
+#include "char_list_list.h"
+
 typedef struct {
   bool exclude_special;
   bool exclude_ambiguous;
@@ -128,66 +130,43 @@ void print_help() {
 }
 
 char get_random_char(const pwd_props_t *props) {
-  static const char ALL_CHARS[] = {
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-      'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
-      'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
-      '4', '5', '6', '7', '8', '9', '!', '?', '*', '#', '_', '.', '-', ',',
-      '$', '%', '&', '/', '^', '@', '~', '=', '+', ':'};
-  static const size_t ALL_CHARS_COUNT =
-      sizeof(ALL_CHARS) / sizeof(ALL_CHARS[0]);
+  STATIC_CONST_CHAR_LIST(NO_AMBIGUOUS_NO_SPECIAL_CHARS, 'a', 'b', 'c', 'd', 'e',
+                         'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q',
+                         'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
+                         'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N',
+                         'P', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1',
+                         '2', '3', '4', '5', '6', '7', '8', '9');
+  STATIC_CONST_CHAR_LIST(AMBIGUOUS_CHARS, 'l', 'I', 'O', 'Q', '0');
+  STATIC_CONST_CHAR_LIST(SPECIAL_CHARS, '!', '?', '*', '#', '_', '.', '-', ',',
+                         '$', '%', '&', '/', '^', '@', '~', '=', '+', ':');
 
-  static const char NO_SPECIAL_CHARS[] = {
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-      'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-  static const size_t NO_SPECIAL_CHARS_COUNT =
-      sizeof(NO_SPECIAL_CHARS) / sizeof(NO_SPECIAL_CHARS[0]);
+  STATIC_CONST_CHAR_LIST_LIST(no_ambiguous_no_special, 1,
+                              &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST);
+  STATIC_CONST_CHAR_LIST_LIST(no_ambiguous, 2,
+                              &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST,
+                              &SPECIAL_CHARS_LIST);
+  STATIC_CONST_CHAR_LIST_LIST(no_special, 2,
+                              &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST,
+                              &AMBIGUOUS_CHARS_LIST);
+  STATIC_CONST_CHAR_LIST_LIST(all, 3, &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST,
+                              &AMBIGUOUS_CHARS_LIST, &SPECIAL_CHARS_LIST);
 
-  static const char NO_AMBIGUOUS_CHARS[] = {
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n',
-      'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A',
-      'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P',
-      'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
-      '4', '5', '6', '7', '8', '9', '!', '?', '*', '#', '_', '.', '-',
-      ',', '$', '%', '&', '/', '^', '@', '~', '=', '+', ':'};
-  static const size_t NO_AMBIGUOUS_CHARS_COUNT =
-      sizeof(NO_AMBIGUOUS_CHARS) / sizeof(NO_AMBIGUOUS_CHARS[0]);
-
-  static const char NO_AMBIGUOUS_NO_SPECIAL_CHARS[] = {
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p',
-      'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E',
-      'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'U', 'V', 'W',
-      'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-  static const size_t NO_AMBIGUOUS_NO_SPECIAL_CHARS_COUNT =
-      sizeof(NO_AMBIGUOUS_NO_SPECIAL_CHARS) /
-      sizeof(NO_AMBIGUOUS_NO_SPECIAL_CHARS[0]);
-
-  const char *allowed_chars = NULL;
-  size_t allowed_chars_count = 0;
-  if (props->exclude_special && props->exclude_special) {
-    allowed_chars = NO_AMBIGUOUS_NO_SPECIAL_CHARS;
-    allowed_chars_count = NO_AMBIGUOUS_NO_SPECIAL_CHARS_COUNT;
-  } else if (props->exclude_special) {
-    allowed_chars = NO_SPECIAL_CHARS;
-    allowed_chars_count = NO_SPECIAL_CHARS_COUNT;
+  const char_list_list_t *allowed = &all;
+  if (props->exclude_ambiguous && props->exclude_special) {
+    allowed = &no_ambiguous_no_special;
   } else if (props->exclude_ambiguous) {
-    allowed_chars = NO_AMBIGUOUS_CHARS;
-    allowed_chars_count = NO_AMBIGUOUS_CHARS_COUNT;
-  } else {
-    allowed_chars = ALL_CHARS;
-    allowed_chars_count = ALL_CHARS_COUNT;
+    allowed = &no_ambiguous;
+  } else if (props->exclude_special) {
+    allowed = &no_special;
   }
 
-  uint8_t idx = allowed_chars_count;
+  const size_t allowed_chars_count = cll_length(allowed);
+  char idx = cll_length(allowed);
   do {
-    getrandom(&idx, 1, GRND_NONBLOCK);
+    getrandom(&idx, sizeof(idx), GRND_NONBLOCK);
   } while (idx >= allowed_chars_count);
 
-  return allowed_chars[idx];
+  return cll_index(allowed, idx);
 }
 
 void generate_password(char *buffer, size_t buffer_size,
