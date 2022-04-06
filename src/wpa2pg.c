@@ -11,6 +11,7 @@
 typedef struct {
   bool exclude_special;
   bool exclude_ambiguous;
+  bool exclude_capital;
 } pwd_props_t;
 
 typedef struct {
@@ -68,6 +69,8 @@ args_t *get_args(int argc, const char *argv[]) {
             args->pwd_props.exclude_special = true;
           } else if (!strcmp(arg, "--exclude-ambiguous")) {
             args->pwd_props.exclude_ambiguous = true;
+          } else if (!strcmp(arg, "--exclude-capital")) {
+            args->pwd_props.exclude_capital = true;
           } else if (!strcmp(arg, "--help")) {
             error = true;
           } else {
@@ -81,6 +84,9 @@ args_t *get_args(int argc, const char *argv[]) {
                 break;
               case 'a':
                 args->pwd_props.exclude_ambiguous = true;
+                break;
+              case 'c':
+                args->pwd_props.exclude_capital = true;
                 break;
               default:
                 error = true;
@@ -122,6 +128,9 @@ void print_help() {
       "  -a --exclude-ambiguous"
       "\tExlude ambiguous characters\n");
   printf(
+      "  -c --exclude-capital"
+      "\tExclude captial letters\n");
+  printf(
       "  -h --help"
       "\t\t\tPrint this message\n");
   printf("\n");
@@ -130,38 +139,52 @@ void print_help() {
 }
 
 char get_random_char(const pwd_props_t *props) {
-  STATIC_CONST_CHAR_LIST(NO_AMBIGUOUS_NO_SPECIAL_CHARS, 'a', 'b', 'c', 'd', 'e',
-                         'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q',
-                         'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
-                         'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N',
-                         'P', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1',
-                         '2', '3', '4', '5', '6', '7', '8', '9');
-  STATIC_CONST_CHAR_LIST(AMBIGUOUS_CHARS, 'l', 'I', 'O', 'Q', '0');
-  STATIC_CONST_CHAR_LIST(SPECIAL_CHARS, '!', '?', '*', '#', '_', '.', '-', ',',
-                         '$', '%', '&', '/', '^', '@', '~', '=', '+', ':');
+  STATIC_CONST_CHAR_LIST(LOWER_CASE_UNAMBIGUOUS_LETTERS, 'a', 'b', 'c', 'd',
+                         'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p',
+                         'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z');
+  STATIC_CONST_CHAR_LIST(LOWER_CASE_AMBIGUOUS_LETTERS, 'l');
+  STATIC_CONST_CHAR_LIST(UPPER_CASE_UNAMBIGUOUS_LETTERS, 'A', 'B', 'C', 'D',
+                         'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R',
+                         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+  STATIC_CONST_CHAR_LIST(UPPER_CASE_AMBIGUOUS_LETTERS, 'I', 'O', 'Q');
+  STATIC_CONST_CHAR_LIST(UNAMBIGUOUS_DIGITS, '1', '2', '3', '4', '5', '6', '7',
+                         '8', '9');
+  STATIC_CONST_CHAR_LIST(AMBIGUOUS_DIGITS, '0');
+  STATIC_CONST_CHAR_LIST(UNAMBIGUOUS_SPECIAL_CHARS, '!', '?', '*', '#', '_',
+                         '.', '-', ',', '$', '%', '&', '/', '^', '@', '~', '=',
+                         '+', ':');
 
-  STATIC_CONST_CHAR_LIST_LIST(no_ambiguous_no_special, 1,
-                              &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST);
-  STATIC_CONST_CHAR_LIST_LIST(no_ambiguous, 2,
-                              &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST,
-                              &SPECIAL_CHARS_LIST);
-  STATIC_CONST_CHAR_LIST_LIST(no_special, 2,
-                              &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST,
-                              &AMBIGUOUS_CHARS_LIST);
-  STATIC_CONST_CHAR_LIST_LIST(all, 3, &NO_AMBIGUOUS_NO_SPECIAL_CHARS_LIST,
-                              &AMBIGUOUS_CHARS_LIST, &SPECIAL_CHARS_LIST);
+  CHAR_LIST_LIST_NODE(lcUnambLets, &LOWER_CASE_UNAMBIGUOUS_LETTERS_LIST);
+  CHAR_LIST_LIST_NODE(lcAmbLets, &LOWER_CASE_AMBIGUOUS_LETTERS_LIST);
+  CHAR_LIST_LIST_NODE(ucUnambLets, &UPPER_CASE_UNAMBIGUOUS_LETTERS_LIST);
+  CHAR_LIST_LIST_NODE(ucAmbLets, &UPPER_CASE_AMBIGUOUS_LETTERS_LIST);
+  CHAR_LIST_LIST_NODE(unambDigs, &UNAMBIGUOUS_DIGITS_LIST);
+  CHAR_LIST_LIST_NODE(ambDigs, &AMBIGUOUS_DIGITS_LIST);
+  CHAR_LIST_LIST_NODE(unambSpecs, &UNAMBIGUOUS_SPECIAL_CHARS_LIST);
 
-  const char_list_list_t *allowed = &all;
-  if (props->exclude_ambiguous && props->exclude_special) {
-    allowed = &no_ambiguous_no_special;
-  } else if (props->exclude_ambiguous) {
-    allowed = &no_ambiguous;
-  } else if (props->exclude_special) {
-    allowed = &no_special;
+  char_list_list_t *allowed = &lcUnambLets;
+  allowed = cll_add(allowed, &unambDigs);
+
+  if (!props->exclude_special) {
+    allowed = cll_add(allowed, &unambSpecs);
   }
 
+  if (!props->exclude_ambiguous) {
+    allowed = cll_add(allowed, &lcAmbLets);
+    allowed = cll_add(allowed, &ambDigs);
+
+    if (!props->exclude_capital) {
+      allowed = cll_add(allowed, &ucAmbLets);
+    }
+  }
+
+  if (!props->exclude_capital) {
+    allowed = cll_add(allowed, &ucUnambLets);
+  }
+
+  allowed = cll_begin(allowed);
   const size_t allowed_chars_count = cll_length(allowed);
-  char idx = cll_length(allowed);
+  char idx = allowed_chars_count;
   do {
     getrandom(&idx, sizeof(idx), GRND_NONBLOCK);
   } while (idx >= allowed_chars_count);

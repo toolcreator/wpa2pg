@@ -3,26 +3,29 @@
 
 #include <stdlib.h>
 
-#define STATIC_CONST_CHAR_LIST(n, ...)                      \
-  static const char n[] = {__VA_ARGS__};                    \
-  static const size_t n##_COUNT = sizeof(n) / sizeof(n[0]); \
-  static const char_list_t n##_LIST = {.chars = n, .count = n##_COUNT}
+#define STATIC_CONST_CHAR_LIST(name, ...)                            \
+  static char const name[] = {__VA_ARGS__};                          \
+  static size_t const name##_COUNT = sizeof(name) / sizeof(name[0]); \
+  static char_list_t const name##_LIST = {.chars = name, .count = name##_COUNT}
 
-#define STATIC_CONST_CHAR_LIST_LIST(n, l, ...)                 \
-  static char_list_t const* const n##_ARRAY[] = {__VA_ARGS__}; \
-  static const char_list_list_t n = {.lists = n##_ARRAY, .length = l}
+#define CHAR_LIST_LIST_NODE(name, l) \
+  char_list_list_t name = {.list = (l), .prev = NULL, .next = NULL}
 
-typedef struct {
+typedef struct char_list_s {
   char const* const chars;
-  const size_t count;
+  size_t const count;
 } char_list_t;
 
-typedef struct {
-  char_list_t const* const* const lists;
-  const size_t length;
+typedef struct char_list_list_s {
+  char_list_t const* const list;
+  struct char_list_list_s* next;
+  struct char_list_list_s* prev;
 } char_list_list_t;
 
-char cll_index(const char_list_list_t* c, unsigned int idx);
-int cll_length(const char_list_list_t* c);
+char_list_list_t* cll_begin(char_list_list_t* l);
+char_list_list_t* cll_end(char_list_list_t* l);
+char_list_list_t* cll_add(char_list_list_t* l, char_list_list_t* n);
+char cll_index(char_list_list_t* l, unsigned int idx);
+int cll_length(char_list_list_t* l);
 
 #endif

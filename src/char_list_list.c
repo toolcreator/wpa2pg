@@ -1,37 +1,67 @@
 #include "char_list_list.h"
 
-char cll_index(const char_list_list_t* c, unsigned int idx) {
-  if (!c || c->length < 1) {
-    return -1;
+char_list_list_t* cll_begin(char_list_list_t* l) {
+  while (l->prev) {
+    l = l->prev;
   }
+  return l;
+}
+char_list_list_t* cll_end(char_list_list_t* l) {
+  while (l->next) {
+    l = l->next;
+  }
+  return l;
+}
+
+char_list_list_t* cll_add(char_list_list_t* l, char_list_list_t* n) {
+  char_list_list_t* end = cll_end(l);
+  end->next = n;
+  n->prev = end;
+  n->next = NULL;
+  return n;
+}
+
+char cll_index(char_list_list_t* l, unsigned int idx) {
+  l = cll_begin(l);
 
   unsigned int sum = 0;
-  unsigned int list_idx = 0;
-  for (; list_idx < c->length; ++list_idx) {
-    sum += c->lists[list_idx]->count;
+  while (l->list) {
+    sum += l->list->count;
     if (idx < sum) {
       break;
     }
-  }
-  if (idx >= sum) {
-    return -1;
+
+    if (l->next) {
+      l = l->next;
+    } else {
+      break;
+    }
   }
 
-  char_list_t const* const target_list = c->lists[list_idx];
+  if (idx >= sum) {
+    return 0x15;  // ASCII NAK
+  }
+
+  char_list_t const* const target_list = l->list;
   const unsigned int base = sum - target_list->count;
   const unsigned int target_idx = idx - base;
 
   return target_list->chars[target_idx];
 }
 
-int cll_length(const char_list_list_t* c) {
-  if (!c) {
-    return -1;
+int cll_length(char_list_list_t* l) {
+  l = cll_begin(l);
+
+  unsigned int list_length = 0;
+  while (l->list) {
+    list_length += l->list->count;
+
+    if (l->next) {
+      l = l->next;
+    } else {
+      break;
+    }
   }
 
-  int length = 0;
-  for (unsigned int i = 0; i < c->length; ++i) {
-    length += c->lists[i]->count;
-  }
-  return length;
+  return list_length;
 }
