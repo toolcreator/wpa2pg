@@ -129,7 +129,7 @@ void print_help() {
       "\tExlude ambiguous characters\n");
   printf(
       "  -c --exclude-capital"
-      "\tExclude captial letters\n");
+      "\t\tExclude capital letters\n");
   printf(
       "  -h --help"
       "\t\t\tPrint this message\n");

@@ -26,7 +26,7 @@ Usage: wpa2pg [options] [PWD_LEN]
 Options:
   -s --exclude-special          Exclude special / include only alphanumeric characters
   -a --exclude-ambiguous        Exlude ambiguous characters
-  -c --exclude-capital  Exclude captial letters
+  -c --exclude-capital          Exclude capital letters
   -h --help                     Print this message
 
 PWD_LEN
