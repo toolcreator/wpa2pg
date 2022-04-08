@@ -20,17 +20,18 @@ make wpa2pg
 ## usage
 
 ```
-$./wpa2pg -h
-Usage: wpa2pg [options] [PWD_LEN]
+$ wpa2pg --help
+Usage: wpa2pg [OPTION...] LENGTH
+WPA2 password generator
 
-Options:
-  -s --exclude-special          Exclude special / include only alphanumeric characters
-  -a --exclude-ambiguous        Exlude ambiguous characters
-  -c --exclude-capital          Exclude capital letters
-  -h --help                     Print this message
+  -a, --exclude-ambiguous    Exclude ambiguous characters
+  -c, --exclude-capital      Exclude capital letters
+  -s, --exclude-special      Exclude special characters
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+  -V, --version              Print program version
 
-PWD_LEN
-  Length of the password (default: 63)
+Report bugs to <de.toolcreator@gmail.com>.
 ```
 
 ## example
