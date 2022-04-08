@@ -1,3 +1,4 @@
+#include <argp.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,127 +16,83 @@ typedef struct {
 } pwd_props_t;
 
 typedef struct {
-  size_t pwd_len;
+  unsigned int length;
   pwd_props_t pwd_props;
-} args_t;
+} arguments_t;
 
-args_t *get_args(int argc, const char *argv[]);
-void print_help();
-
+static error_t parse_opt(int key, char *arg, struct argp_state *state);
 char get_random_char(const pwd_props_t *props);
 void generate_password(char *buffer, size_t buffer_size,
                        const pwd_props_t *props);
 
+const char * argp_program_version = "wpa2pg 1.3.0";
+const char * argp_program_bug_address = "<de.toolcreator@gmail.com>";
+static const char doc[] = "WPA2 password generator";
+static const char args_doc[] = "LENGTH";
+static const struct argp_option options[] = {
+    {"exclude-special", 's', 0, 0, "Exclude special characters"},
+    {"exclude-ambiguous", 'a', 0, 0, "Exclude ambiguous characters"},
+    {"exclude-capital", 'c', 0, 0, "Exclude capital letters"},
+    {0}};
+static const struct argp argp = {options, parse_opt, args_doc, doc};
+
 int main(int argc, char *argv[]) {
-  args_t *args = get_args(argc, (const char **)argv);
-  if (args != NULL) {
-    const size_t pwd_str_size = args->pwd_len + 1;
-    char *pwd_str = calloc(pwd_str_size, sizeof(char));
-    if (pwd_str != NULL) {
-      generate_password(pwd_str, pwd_str_size, &args->pwd_props);
-      printf("%s\n", pwd_str);
+  arguments_t args = {.length = 63,
+                      .pwd_props = {.exclude_special = false,
+                                    .exclude_ambiguous = false,
+                                    .exclude_capital = false}};
+  argp_parse(&argp, argc, argv, 0, 0, &args);
 
-      free(pwd_str);
-      pwd_str = NULL;
-    } else {
-      printf("Failed to allocate memory for a password of length %lu\n",
-             pwd_str_size - 1);
-    }
+  const size_t pwd_str_size = args.length + 1;
+  char *pwd_str = calloc(pwd_str_size, sizeof(char));
+  if (pwd_str != NULL) {
+    generate_password(pwd_str, pwd_str_size, &args.pwd_props);
+    printf("%s\n", pwd_str);
 
-    free(args);
-    args = NULL;
+    free(pwd_str);
+    pwd_str = NULL;
   } else {
-    print_help();
+    printf("Failed to allocate memory for a password of length %lu\n",
+           pwd_str_size - 1);
   }
+
   return 0;
 }
 
-args_t *get_args(int argc, const char *argv[]) {
-  args_t *args = calloc(1, sizeof(args_t));
-  if (args == NULL) {
-    return args;
-  }
-  args->pwd_len = 63;
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+  arguments_t *arguments = state->input;
 
-  int arg_idx = 1;
-  bool error = false;
-  for (; arg_idx < argc; ++arg_idx) {
-    const char *arg = argv[arg_idx];
-    if (arg[0] == '-') {
-      const size_t arg_len = strlen(arg);
-      if (arg_len > 1) {
-        if (arg[1] == '-') {
-          if (!strcmp(arg, "--exclude-special")) {
-            args->pwd_props.exclude_special = true;
-          } else if (!strcmp(arg, "--exclude-ambiguous")) {
-            args->pwd_props.exclude_ambiguous = true;
-          } else if (!strcmp(arg, "--exclude-capital")) {
-            args->pwd_props.exclude_capital = true;
-          } else if (!strcmp(arg, "--help")) {
-            error = true;
-          } else {
-            error = true;
-          }
-        } else {
-          for (int i = 1; i < arg_len && !error; ++i) {
-            switch (arg[i]) {
-              case 's':
-                args->pwd_props.exclude_special = true;
-                break;
-              case 'a':
-                args->pwd_props.exclude_ambiguous = true;
-                break;
-              case 'c':
-                args->pwd_props.exclude_capital = true;
-                break;
-              default:
-                error = true;
-                break;
-            }
-          }
-        }
-      } else {
-        error = true;
-        break;
-      }
-    } else {
-      errno = 0;
-      args->pwd_len = strtoul(argv[arg_idx], NULL, 10);
-      if (errno != 0 || args->pwd_len == 0) {
-        error = true;
-      }
+  switch (key) {
+    case 's':
+      arguments->pwd_props.exclude_special = true;
       break;
-    }
+    case 'a':
+      arguments->pwd_props.exclude_ambiguous = true;
+      break;
+    case 'c':
+      arguments->pwd_props.exclude_capital = true;
+      break;
+    case ARGP_KEY_ARG:
+      if (state->arg_num >= 1) {
+        argp_usage(state);
+      }
+
+      const int parsed_length = atoi(arg);
+      if (parsed_length > 0) {
+        arguments->length = parsed_length;
+      } else {
+        argp_usage(state);
+      }
+
+      break;
+
+    case ARGP_KEY_END:
+      break;
+
+    default:
+      return ARGP_ERR_UNKNOWN;
   }
-
-  error = arg_idx < argc - 1 || error;
-  if (error) {
-    free(args);
-    args = NULL;
-  }
-
-  return args;
-}
-
-void print_help() {
-  printf("Usage: wpa2pg [options] [PWD_LEN]\n");
-  printf("\n");
-  printf("Options:\n");
-  printf(
-      "  -s --exclude-special"
-      "\t\tExclude special / include only alphanumeric characters\n");
-  printf(
-      "  -a --exclude-ambiguous"
-      "\tExlude ambiguous characters\n");
-  printf(
-      "  -c --exclude-capital"
-      "\t\tExclude capital letters\n");
-  printf(
-      "  -h --help"
-      "\t\t\tPrint this message\n");
-  printf("\n");
-  printf("PWD_LEN\n");
-  printf("  Length of the password (default: 63)\n");
+  return 0;
 }
 
 char get_random_char(const pwd_props_t *props) {
