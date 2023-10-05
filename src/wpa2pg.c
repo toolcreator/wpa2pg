@@ -27,7 +27,7 @@ void generate_password(char *buffer, size_t buffer_size,
                        const pwd_props_t *props);
 void freePtr(void **p);
 
-const char *argp_program_version = "wpa2pg 1.4.0";
+const char *argp_program_version = "wpa2pg 1.4.1";
 const char *argp_program_bug_address = "<de.toolcreator@gmail.com>";
 static const char doc[] = "WPA2 password generator";
 static const char args_doc[] = "LENGTH";

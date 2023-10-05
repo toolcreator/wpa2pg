@@ -26,10 +26,15 @@ WPA2 password generator
 
   -a, --exclude-ambiguous    Exclude ambiguous characters
   -c, --exclude-capital      Exclude capital letters
+  -e, --exclude-extra=CHAR_STRING
+                             More characters to exclude
   -s, --exclude-special      Exclude special characters
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
 
 Report bugs to <de.toolcreator@gmail.com>.
 ```
