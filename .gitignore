@@ -1,5 +1,5 @@
 wpa2pg
 src/*.o
-.vscode/settings.json
+.vscode/
 compile_commands.json
 .cache/
